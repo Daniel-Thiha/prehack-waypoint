@@ -4,10 +4,10 @@
 
 | Student  ID |        Student  Name        | GitHub Username | Features |
 |:-:|-|:-:|:-:|
-| 68130500840 |      Thiha Phone Thaw       |  Daniel-Thiha   |     -    |
-| 68130500844 |     Ye Htet Maung Maung     |     YeHtetMM    |     -    |
-| 68130500857 |   Chatdanai Denis Smolman   |    DenniTrea    |     -    |
-| 68130500870 |     SIRISAK KOTKHANGPHU     |      ballDp     |     -    |
+| 68130500840 |      Thiha Phone Thaw       |  Daniel-Thiha   |     ToolModes, Export    |
+| 68130500844 |     Ye Htet Maung Maung     |     YeHtetMM    |     Auth, Canvas    |
+| 68130500857 |   Chatdanai Denis Smolman   |    DenniTrea    |     VoiceChat    |
+| 68130500870 |     Sirisak Kotkhangphu     |      ballDp     |     TextChat    |
 
 ---
 
