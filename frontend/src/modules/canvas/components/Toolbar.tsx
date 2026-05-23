@@ -1,11 +1,13 @@
-import { useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { ToolType } from "../types/canvas.types";
+import { MODES } from "../../../tools/types";
 
 interface ToolbarProps {
   tool: ToolType;
   color: string;
   strokeWidth: number;
   stickyBg: string;
+  activeMode: string | null;
   onToolChange: (t: ToolType) => void;
   onColorChange: (c: string) => void;
   onWidthChange: (w: number) => void;
@@ -14,6 +16,7 @@ interface ToolbarProps {
   onClear: () => void;
   onUndo: () => void;
   onRedo: () => void;
+  onModeChange: (mode: string | null) => void;
 }
 
 const TOOLS: { id: ToolType; label: string; icon: React.ReactNode }[] = [
@@ -90,8 +93,21 @@ const hasWidthPanel = (t: ToolType) => ["pen", "line", "rect", "circle"].include
 const hasStickyPanel = (t: ToolType) => t === "sticky";
 const hasImagePanel = (t: ToolType) => t === "image";
 
-const Toolbar = ({ tool, color, strokeWidth, stickyBg, onToolChange, onColorChange, onWidthChange, onStickyBgChange, onImageFile, onClear, onUndo, onRedo }: ToolbarProps) => {
+const Toolbar = ({ tool, color, strokeWidth, stickyBg, activeMode, onToolChange, onColorChange, onWidthChange, onStickyBgChange, onImageFile, onClear, onUndo, onRedo, onModeChange }: ToolbarProps) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const modePickerRef = useRef<HTMLDivElement>(null);
+  const [modePickerOpen, setModePickerOpen] = useState(false);
+
+  useEffect(() => {
+    if (!modePickerOpen) return;
+    const handleClickOutside = (e: MouseEvent) => {
+      if (modePickerRef.current && !modePickerRef.current.contains(e.target as Node)) {
+        setModePickerOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [modePickerOpen]);
   const showSubPanel = hasColorPanel(tool) || hasWidthPanel(tool) || hasStickyPanel(tool) || hasImagePanel(tool);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -107,7 +123,7 @@ const Toolbar = ({ tool, color, strokeWidth, stickyBg, onToolChange, onColorChan
   };
 
   return (
-    <div className="flex flex-row shrink-0">
+    <div className="flex flex-row shrink-0 relative">
 
       {/* Main icon strip */}
       <div className="flex flex-col p-1.5 bg-gray-900 border-r border-gray-800 w-12 items-center overflow-y-auto">
@@ -153,7 +169,39 @@ const Toolbar = ({ tool, color, strokeWidth, stickyBg, onToolChange, onColorChan
           </button>
         </div>
 
-        <div className="mt-auto pt-2">
+        <div className="mt-auto pt-2 flex flex-col gap-0.5 w-full items-center">
+          {/* Modes button */}
+          <button
+            onClick={() => setModePickerOpen((o) => !o)}
+            title={activeMode ? `Mode: ${MODES[activeMode]?.name}` : "Select mode toolbox"}
+            className={`w-9 h-9 rounded-lg flex items-center justify-center transition-colors mx-auto text-base leading-none ${
+              activeMode
+                ? "ring-1 ring-inset"
+                : modePickerOpen
+                ? "bg-gray-700 text-white"
+                : "text-gray-400 hover:bg-gray-800 hover:text-white"
+            }`}
+            style={
+              activeMode
+                ? {
+                    backgroundColor: MODES[activeMode].accent + "22",
+                    color: MODES[activeMode].accent,
+                  }
+                : {}
+            }
+          >
+            {activeMode ? (
+              MODES[activeMode].icon
+            ) : (
+              <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.6" className="w-4 h-4">
+                <rect x="3" y="3" width="5" height="5" rx="1" />
+                <rect x="12" y="3" width="5" height="5" rx="1" />
+                <rect x="3" y="12" width="5" height="5" rx="1" />
+                <rect x="12" y="12" width="5" height="5" rx="1" />
+              </svg>
+            )}
+          </button>
+
           <button
             onClick={onClear}
             title="Clear canvas"
@@ -165,6 +213,61 @@ const Toolbar = ({ tool, color, strokeWidth, stickyBg, onToolChange, onColorChan
           </button>
         </div>
       </div>
+
+      {/* Mode picker popup — outside overflow container, positioned relative to toolbar wrapper */}
+      {modePickerOpen && (
+        <div ref={modePickerRef} className="absolute left-12 bottom-0 w-52 bg-gray-900 border border-gray-700 rounded-xl shadow-2xl overflow-hidden z-50">
+          <div className="px-3 py-2 border-b border-gray-800">
+            <span className="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">
+              Mode Toolboxes
+            </span>
+          </div>
+          <div className="flex flex-col gap-0.5 p-1.5">
+            {Object.values(MODES).map((mode) => (
+              <button
+                key={mode.id}
+                onClick={() => {
+                  onModeChange(activeMode === mode.id ? null : mode.id);
+                  setModePickerOpen(false);
+                }}
+                className="w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-left transition-colors hover:bg-gray-800"
+                style={
+                  activeMode === mode.id
+                    ? { backgroundColor: mode.accent + "2e", color: mode.accent }
+                    : {}
+                }
+              >
+                <span className="text-base leading-none w-5 text-center">
+                  {mode.icon}
+                </span>
+                <div className="flex flex-col min-w-0">
+                  <span
+                    className={`text-xs font-medium truncate ${
+                      activeMode === mode.id ? "" : "text-gray-300"
+                    }`}
+                  >
+                    {mode.name}
+                  </span>
+                  {mode.description && (
+                    <span className="text-[10px] text-gray-500 truncate">
+                      {mode.description}
+                    </span>
+                  )}
+                </div>
+                {activeMode === mode.id && (
+                  <svg
+                    viewBox="0 0 16 16"
+                    fill="currentColor"
+                    className="w-3 h-3 ml-auto shrink-0"
+                  >
+                    <path d="M3 8l4 4 6-6" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                )}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Contextual sub-panel */}
       {showSubPanel && (
