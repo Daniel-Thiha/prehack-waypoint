@@ -1,13 +1,17 @@
-import { createBrowserRouter } from "react-router-dom";
+import { createBrowserRouter, Navigate } from "react-router-dom";
 import App from "./App";
-import { additionRoutes } from "./modules/addition/routers/addition.router";
-import { multiplicationRoutes } from "./modules/multiplication/routers/multiplication.router";
+import { homeRoutes } from "./modules/home/routers/home.router";
+import { canvasRoutes } from "./modules/canvas/routers/canvas.router";
 
 const mainRouter = createBrowserRouter([
   {
     path: "/",
     element: <App />,
-    children: [...additionRoutes, ...multiplicationRoutes],
+    children: [
+      ...homeRoutes,
+      ...canvasRoutes,
+      { path: "*", element: <Navigate to="/" replace /> },
+    ],
   },
 ]);
 

@@ -1,8 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Get a free hosted Postgres database in seconds: `npx create-db`
-
 generator client {
   provider = "prisma-client"
   output   = "../generated/prisma"
@@ -12,18 +7,56 @@ datasource db {
   provider = "sqlite"
 }
 
-model MultiplicationRecord {
-  id        Int      @id @default(autoincrement())
-  a         Float
-  b         Float
-  result    Float
-  createdAt DateTime @default(now())
+model User {
+  id          String       @id @default(cuid())
+  username    String       @unique
+  email       String       @unique
+  googleId    String       @unique
+  avatar      String?
+  createdAt   DateTime     @default(now())
+  ownedRooms  Room[]        @relation("RoomOwner")
+  memberships RoomMember[]
+  history     RoomHistory[]
 }
 
-model AdditionRecord {
-  id        Int      @id @default(autoincrement())
-  a         Float
-  b         Float
-  result    Float
-  createdAt DateTime @default(now())
+model Room {
+  id        String       @id @default(cuid())
+  name      String
+  code      String       @unique
+  ownerId   String
+  isPrivate Boolean      @default(false)
+  passcode  String?
+  owner     User         @relation("RoomOwner", fields: [ownerId], references: [id])
+  members   RoomMember[]
+  createdAt DateTime     @default(now())
+}
+
+model RoomMember {
+  userId   String
+  roomId   String
+  user     User     @relation(fields: [userId], references: [id])
+  room     Room     @relation(fields: [roomId], references: [id])
+  joinedAt DateTime @default(now())
+
+  @@id([userId, roomId])
+}
+
+model RoomHistory {
+  id       String   @id @default(cuid())
+  userId   String
+  roomCode String
+  roomName String
+  joinedAt DateTime @default(now())
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, roomCode])
+  @@index([userId, joinedAt(sort: Desc)])
+}
+
+model RoomStroke {
+  id       String @id
+  roomCode String
+  data     String
+
+  @@index([roomCode])
 }
