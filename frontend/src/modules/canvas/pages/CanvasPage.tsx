@@ -4,6 +4,7 @@ import { io, type Socket } from "socket.io-client";
 import { useAuth } from "../../../contexts/AuthContext";
 import Canvas from "../components/Canvas";
 import Toolbar from "../components/Toolbar";
+import FloatingToolbox from "../components/FloatingToolbox";
 import ChatPanel from "../components/ChatPanel";
 import VoicePanel from "../components/VoicePanel";
 import PreJoinModal from "../components/PreJoinModal";
@@ -43,6 +44,8 @@ const CanvasPage = () => {
   const [color, setColor] = useState("#ffffff");
   const [strokeWidth, setStrokeWidth] = useState(5);
   const [stickyBg, setStickyBg] = useState("#fef08a");
+  const [activeMode, setActiveMode] = useState<string | null>(null);
+  const [activeModeToolId, setActiveModeToolId] = useState<string | null>(null);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [peers, setPeers] = useState<Peer[]>([]);
   const [mySocketId, setMySocketId] = useState("");
@@ -307,6 +310,7 @@ const CanvasPage = () => {
           color={color}
           strokeWidth={strokeWidth}
           stickyBg={stickyBg}
+          activeMode={activeMode}
           onToolChange={setTool}
           onColorChange={setColor}
           onWidthChange={setStrokeWidth}
@@ -315,6 +319,10 @@ const CanvasPage = () => {
           onClear={() => clearCbRef.current?.()}
           onUndo={() => undoCbRef.current?.()}
           onRedo={() => redoCbRef.current?.()}
+          onModeChange={(mode) => {
+            setActiveMode(mode);
+            setActiveModeToolId(null);
+          }}
         />
 
         <Canvas
@@ -348,6 +356,18 @@ const CanvasPage = () => {
         peers={peers}
         mySocketId={mySocketId}
       />
+
+      {activeMode && (
+        <FloatingToolbox
+          modeId={activeMode}
+          activeModeToolId={activeModeToolId}
+          onToolSelect={setActiveModeToolId}
+          onClose={() => {
+            setActiveMode(null);
+            setActiveModeToolId(null);
+          }}
+        />
+      )}
     </div>
   );
 };
